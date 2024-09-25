@@ -30,9 +30,13 @@ async def send_azkar(azkar_type):
     channel = client.get_channel(AZKAR_CHANNEL_ID)
     if channel is not None:
         if azkar_type == "morning":
-            await channel.send("Good morning! Here's your morning azkar: [Insert morning azkar text here]")
+            await channel.send("<@&1220848108934529145> Good morning! Here's your morning azkar: ")
+            for zikr in azkar.morning_azkar:
+                await channel.send(zikr)
         elif azkar_type == "evening":
-            await channel.send("Good evening! Here's your evening azkar: [Insert evening azkar text here]")
+            await channel.send("<@&1220848108934529145> Good evening! Here's your evening azkar: ")
+            for zikr in azkar.evening_azkar:
+                await channel.send(zikr)
     else:
         print(f"Channel with ID {AZKAR_CHANNEL_ID} not found")
 
@@ -70,8 +74,6 @@ async def on_message(message):
     if message.content.startswith('$start'):
         if ping_task is None or ping_task.cancelled():
             ping_task = asyncio.create_task(ping_staff())
-            for zikr in azkar.morning_azkar:
-                await message.channel.send(zikr)
             await message.channel.send('Started pinging Staff every 2 hours and 1 minute.')
         else:
             await message.channel.send('Already pinging Staff.')
