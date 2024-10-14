@@ -3,7 +3,6 @@ import os
 import discord
 import asyncio
 import dotenv
-from azkar.channels import PING_CHANNEL_ID
 import azkar.azkar_util as azkar_util
 
 intents = discord.Intents.default()
@@ -12,8 +11,14 @@ intents.message_content = True
 dotenv.load_dotenv()
 client = discord.Client(intents=intents)
 
+PING_CHANNEL_ID = -1
+AZKAR_CHANNEL_ID = -1
+
 
 async def ping_staff(client):
+    if PING_CHANNEL_ID == -1:
+        print("Ping channel not set")
+        return
     while True:
         channel = client.get_channel(PING_CHANNEL_ID)
         if channel is not None:
@@ -35,14 +40,32 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    global AZKAR_CHANNEL_ID
+
     if message.content.startswith('!start-azkar'):
-        await azkar_util.send_azkar(client, "morning")
+        if AZKAR_CHANNEL_ID == -1:
+            await message.channel.send(
+                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
+            )
+            return
+
+        await azkar_util.send_azkar(client, "morning", AZKAR_CHANNEL_ID)
 
     elif message.content.startswith('!send-azkar'):
-        await azkar_util.send_azkar(client, "evening")
+        if AZKAR_CHANNEL_ID == -1:
+            await message.channel.send(
+                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
+            )
+            return
+
+        await azkar_util.send_azkar(client, "evening", AZKAR_CHANNEL_ID)
+
+    elif message.content.startswith('!set-azkar-channel'):
+        AZKAR_CHANNEL_ID = int(message.content.split(
+            ' ')[1].strip('<>#'))
+
 
 if __name__ == '__main__':
-
     try:
         token = os.environ.get("DISCORD_TOKEN")
         if token is None:

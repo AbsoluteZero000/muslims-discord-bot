@@ -1,26 +1,26 @@
+from .azkar import morning_azkar, evening_azkar
 import asyncio
-import azkar
 from datetime import datetime, timedelta
 import pytz
 
 
-async def send_azkar(client, azkar_type):
-    channel = client.get_channel(AZKAR_CHANNEL_ID)
+async def send_azkar(client, azkar_type, Azkar_channel):
+    channel = client.get_channel(Azkar_channel)
 
     if channel is not None:
         if azkar_type == "morning":
             await channel.send("Good morning! Here's your morning azkar: ")
-            for zikr in azkar.morning_azkar:
+            for zikr in morning_azkar:
                 await asyncio.sleep(2)
                 await channel.send(zikr)
 
         elif azkar_type == "evening":
             await channel.send("Good evening! Here's your evening azkar: ")
-            for zikr in azkar.evening_azkar:
+            for zikr in evening_azkar:
                 await asyncio.sleep(2)
                 await channel.send(zikr)
     else:
-        print(f"Channel with ID {AZKAR_CHANNEL_ID} not found")
+        print(f"Channel with ID {Azkar_channel} not found")
 
 
 async def schedule_azkar():
