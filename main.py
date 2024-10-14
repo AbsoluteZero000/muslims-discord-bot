@@ -3,20 +3,17 @@ import os
 import discord
 import asyncio
 import dotenv
-from datetime import datetime, timedelta
-import pytz
-import azkar
+from azkar.channels import PING_CHANNEL_ID
+import azkar.azkar_util as azkar_util
 
 intents = discord.Intents.default()
 intents.message_content = True
+
 dotenv.load_dotenv()
 client = discord.Client(intents=intents)
-ping_task = None
-PING_CHANNEL_ID = 1220847225543065761
-AZKAR_CHANNEL_ID = 1147955942437179522
 
 
-async def ping_staff():
+async def ping_staff(client):
     while True:
         channel = client.get_channel(PING_CHANNEL_ID)
         if channel is not None:
@@ -26,72 +23,37 @@ async def ping_staff():
         await asyncio.sleep(7260)
 
 
-async def send_azkar(azkar_type):
-    channel = client.get_channel(AZKAR_CHANNEL_ID)
-    if channel is not None:
-        if azkar_type == "morning":
-            await channel.send("<@&1220848108934529145> Good morning! Here's your morning azkar: ")
-            for zikr in azkar.morning_azkar:
-                await channel.send(zikr)
-        elif azkar_type == "evening":
-            await channel.send("<@&1220848108934529145> Good evening! Here's your evening azkar: ")
-            for zikr in azkar.evening_azkar:
-                await channel.send(zikr)
-    else:
-        print(f"Channel with ID {AZKAR_CHANNEL_ID} not found")
-
-
-async def schedule_azkar():
-    while True:
-        now = datetime.now(pytz.timezone('Asia/Riyadh'))
-
-        # Schedule morning azkar
-        morning_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
-        if now > morning_time:
-            morning_time += timedelta(days=1)
-        await asyncio.sleep((morning_time - now).total_seconds())
-        await send_azkar("morning")
-
-        # Schedule evening azkar
-        evening_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
-        if now > evening_time:
-            evening_time += timedelta(days=1)
-        await asyncio.sleep((evening_time - now).total_seconds())
-        await send_azkar("evening")
-
-
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    client.loop.create_task(schedule_azkar())
+    # client.loop.create_task(schedule_azkar())
 
 
 @client.event
 async def on_message(message):
-    global ping_task
+    print(message.content)
     if message.author == client.user:
         return
-    if message.content.startswith('$start'):
-        if ping_task is None or ping_task.cancelled():
-            ping_task = asyncio.create_task(ping_staff())
-            await message.channel.send('Started pinging Staff every 2 hours and 1 minute.')
-        else:
-            await message.channel.send('Already pinging Staff.')
-    elif message.content.startswith('$end'):
-        if ping_task is not None and not ping_task.cancelled():
-            ping_task.cancel()
-            await message.channel.send('Stopped pinging @Staff.')
-        else:
-            await message.channel.send('No ongoing pinging to stop.')
 
-try:
-    token = os.environ.get("DISCORD_TOKEN")
-    if token is None:
-        raise Exception("Please add your token to the Secrets pane.")
-    client.run(token)
-except discord.HTTPException as e:
-    if e.status == 429:
-        print("The Discord servers denied the connection for making too many requests")
-        print("Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests")
-    else:
-        raise e
+    if message.content.startswith('!start-azkar'):
+        await azkar_util.send_azkar(client, "morning")
+
+    elif message.content.startswith('!send-azkar'):
+        await azkar_util.send_azkar(client, "evening")
+
+if __name__ == '__main__':
+
+    try:
+        token = os.environ.get("DISCORD_TOKEN")
+        if token is None:
+            raise Exception("Please add your token to the Secrets pane.")
+        client.run(token)
+
+    except discord.HTTPException as e:
+        if e.status == 429:
+            print(
+                "The Discord servers denied the connection for making too many requests")
+            print(
+                "Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests")
+        else:
+            raise e
