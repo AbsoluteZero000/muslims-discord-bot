@@ -23,18 +23,18 @@ async def send_azkar(client, azkar_type, Azkar_channel):
         print(f"Channel with ID {Azkar_channel} not found")
 
 
-async def schedule_azkar():
+async def schedule_azkar(client, Azkar_channel):
     while True:
         now = datetime.now(pytz.timezone('Asia/Riyadh'))
 
-        morning_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
+        morning_time = now.replace(hour=19, minute=50, second=0, microsecond=0)
         if now > morning_time:
             morning_time += timedelta(days=1)
-        await asyncio.sleep((morning_time - now).total_seconds())
-        await send_azkar("morning")
+
+        await send_azkar(client, "morning", Azkar_channel)
 
         evening_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
         if now > evening_time:
             evening_time += timedelta(days=1)
-        await asyncio.sleep((evening_time - now).total_seconds())
-        await send_azkar("evening")
+
+        await send_azkar(client, "evening", Azkar_channel)

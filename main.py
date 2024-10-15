@@ -31,7 +31,6 @@ async def ping_staff(client):
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    # client.loop.create_task(schedule_azkar())
 
 
 @client.event
@@ -41,6 +40,7 @@ async def on_message(message):
         return
 
     global AZKAR_CHANNEL_ID
+    global PING_CHANNEL_ID
 
     if message.content.startswith('!start-azkar'):
         if AZKAR_CHANNEL_ID == -1:
@@ -64,6 +64,28 @@ async def on_message(message):
         AZKAR_CHANNEL_ID = int(message.content.split(
             ' ')[1].strip('<>#'))
 
+    elif message.content.startswith('!set-ping-channel'):
+        PING_CHANNEL_ID = int(message.content.split(
+            ' ')[1].strip('<>#'))
+
+    elif message.content.startswith('!schedule-azkar'):
+        if AZKAR_CHANNEL_ID == -1:
+            await message.channel.send(
+                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
+            )
+            return
+
+    elif message.content.startswith('!help'):
+        await message.channel.send(
+            """
+Commands:
+1. set the channel that the azkar will be sent to ```!set-azkar-channel #channel-name```
+2. set the channel that the ping will be sent to ```!set-ping-channel #channel-name```
+3. start scheduling azkar ```!schedule-azkar```
+4. send azkar ```!send-azkar```
+            """
+        )
+        await azkar_util.schedule_azkar(client, AZKAR_CHANNEL_ID)
 
 if __name__ == '__main__':
     try:
