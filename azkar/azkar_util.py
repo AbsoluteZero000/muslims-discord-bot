@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import pytz
 
 
-async def send_azkar(client, azkar_type, Azkar_channel):
-    channel = client.get_channel(Azkar_channel)
+async def send_azkar(ctx, azkar_type, Azkar_channel):
+    channel = ctx.bot.get_channel(Azkar_channel)
 
     if channel is not None:
         if azkar_type == "morning":
@@ -23,18 +23,27 @@ async def send_azkar(client, azkar_type, Azkar_channel):
         print(f"Channel with ID {Azkar_channel} not found")
 
 
-async def schedule_azkar(client, Azkar_channel):
-    while True:
-        now = datetime.now(pytz.timezone('Asia/Riyadh'))
+async def schedule_azkar(ctx, Azkar_channel):
+    timezone = pytz.timezone('Asia/Riyadh')
 
-        morning_time = now.replace(hour=19, minute=50, second=0, microsecond=0)
+    while True:
+        now = datetime.now(timezone)
+
+        morning_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
         if now > morning_time:
             morning_time += timedelta(days=1)
-
-        await send_azkar(client, "morning", Azkar_channel)
 
         evening_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
         if now > evening_time:
             evening_time += timedelta(days=1)
 
-        await send_azkar(client, "evening", Azkar_channel)
+        next_alarm = min(morning_time, evening_time)
+        sleep_duration = (next_alarm - now).total_seconds()
+
+        print(f"Sleeping for {sleep_duration} seconds until the next alarm.")
+        await asyncio.sleep(sleep_duration)
+
+        if next_alarm == morning_time:
+            await send_azkar(ctx, "morning", Azkar_channel)
+        elif next_alarm == evening_time:
+            await send_azkar(ctx, "evening", Azkar_channel)

@@ -1,98 +1,56 @@
 #!/usr/bin/env python3
 import os
-import discord
-import asyncio
 import dotenv
+import discord
+from discord.ext import commands
 import azkar.azkar_util as azkar_util
 
 intents = discord.Intents.default()
 intents.message_content = True
+bot = commands.Bot(command_prefix='/', intents=intents)
 
-dotenv.load_dotenv()
-client = discord.Client(intents=intents)
 
 PING_CHANNEL_ID = -1
 AZKAR_CHANNEL_ID = -1
 
 
-async def ping_staff(client):
-    if PING_CHANNEL_ID == -1:
-        print("Ping channel not set")
-        return
-    while True:
-        channel = client.get_channel(PING_CHANNEL_ID)
-        if channel is not None:
-            await channel.send('<@&1220819948826398720> use /bump in this channel')
-        else:
-            print(f"Channel with ID {PING_CHANNEL_ID} not found")
-        await asyncio.sleep(7260)
-
-
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
+    await bot.tree.sync()
+    print(f'We have logged in as {bot.user}')
 
 
-@client.event
-async def on_message(message):
-    print(message.content)
-    if message.author == client.user:
-        return
-
+@bot.command(name="start-azkar")
+async def start_azkar(ctx):
+    """This command starts the azkar scheduler"""
     global AZKAR_CHANNEL_ID
-    global PING_CHANNEL_ID
-
-    if message.content.startswith('!start-azkar'):
-        if AZKAR_CHANNEL_ID == -1:
-            await message.channel.send(
-                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
-            )
-            return
-
-        await azkar_util.send_azkar(client, "morning", AZKAR_CHANNEL_ID)
-
-    elif message.content.startswith('!send-azkar'):
-        if AZKAR_CHANNEL_ID == -1:
-            await message.channel.send(
-                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
-            )
-            return
-
-        await azkar_util.send_azkar(client, "evening", AZKAR_CHANNEL_ID)
-
-    elif message.content.startswith('!set-azkar-channel'):
-        AZKAR_CHANNEL_ID = int(message.content.split(
-            ' ')[1].strip('<>#'))
-
-    elif message.content.startswith('!set-ping-channel'):
-        PING_CHANNEL_ID = int(message.content.split(
-            ' ')[1].strip('<>#'))
-
-    elif message.content.startswith('!schedule-azkar'):
-        if AZKAR_CHANNEL_ID == -1:
-            await message.channel.send(
-                "Please set the channel to send azkar to.\n eg. !set-azkar-channel #channel-name"
-            )
-            return
-
-    elif message.content.startswith('!help'):
-        await message.channel.send(
+    if AZKAR_CHANNEL_ID == -1:
+        await ctx.send(
             """
-Commands:
-1. set the channel that the azkar will be sent to ```!set-azkar-channel #channel-name```
-2. set the channel that the ping will be sent to ```!set-ping-channel #channel-name```
-3. start scheduling azkar ```!schedule-azkar```
-4. send azkar ```!send-azkar```
+            Please set the channel to send azkar to.
+            eg. !set-azkar-channel #channel-name
             """
         )
-        await azkar_util.schedule_azkar(client, AZKAR_CHANNEL_ID)
+        return
+
+    await azkar_util.schedule_azkar(ctx, AZKAR_CHANNEL_ID)
+
+
+@bot.command(name="set-azkar-channel")
+async def set_azkar_channel(ctx, channel):
+    """This command sets the channel to send azkar to"""
+    global AZKAR_CHANNEL_ID
+    AZKAR_CHANNEL_ID = int(channel.strip('<>#'))
+    await ctx.send(f"Set azkar channel to {channel}")
+
 
 if __name__ == '__main__':
     try:
+        dotenv.load_dotenv()
         token = os.environ.get("DISCORD_TOKEN")
         if token is None:
             raise Exception("Please add your token to the Secrets pane.")
-        client.run(token)
+        bot.run(token)
 
     except discord.HTTPException as e:
         if e.status == 429:
