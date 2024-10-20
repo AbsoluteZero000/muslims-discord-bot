@@ -20,6 +20,16 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
 
 
+@bot.command(name="send_morning")
+async def send_morning(ctx):
+    await azkar_util.send_azkar(ctx, "morning", AZKAR_CHANNEL_ID)
+
+
+@bot.command(name="send_evening")
+async def send_evening(ctx):
+    await azkar_util.send_azkar(ctx, "evening", AZKAR_CHANNEL_ID)
+
+
 @bot.command(name="start-azkar")
 async def start_azkar(ctx):
     """This command starts the azkar scheduler"""
