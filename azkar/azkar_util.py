@@ -9,7 +9,10 @@ async def send_azkar(ctx, azkar_type, Azkar_channel):
 
     if channel is not None:
         if azkar_type == "morning":
-            await channel.send("Good morning! Here's your morning azkar: ")
+            await channel.send("""
+            السلام عليكم ورحمة الله وبراكاه, أذكرم بأذكار الصباح يا اخوة:
+            Asalam Alaikum Brothers here is your morning azkar:
+            """)
             for zikr in morning_azkar:
                 await asyncio.sleep(2)
                 await channel.send(zikr)
