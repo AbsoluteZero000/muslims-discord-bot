@@ -71,12 +71,33 @@ async def set_quran_channel(ctx, channel):
 
 @bot.command(name="start-werd")
 async def start_werd(ctx, startingPage, numOfPages):
+
     numOfPages = int(numOfPages)
     startingPage = int(startingPage)
     quranChannel = ctx.bot.get_channel(QURAN_CHANNEL_ID)
     timezone = pytz.timezone('Asia/Riyadh')
 
     while True:
+        await quranChannel.send(f"""
+<@&1220848108934529145>
+السلام ورحمة الله وبركاته 🌸
+إليكم صفحاتكم اليومية من القرآن الكريم 📖
+اليوم من الصفحة {startingPage} إلى الصفحة {startingPage + numOfPages-1}.
+نسأل الله أن يفتح علينا وعليكم فهم كتابه 🌹
+
+
+As-salamu alaykum warahmatullaahi wabarokaatuh 🌸
+Here are your daily Quran pages 📖
+Today, from page {startingPage} to page {startingPage + numOfPages-1}.
+May Allah grant us understanding of His Book 🌹
+    """)
+
+        for i in range(startingPage, startingPage + numOfPages):
+            embed = Embed(title=f"Quran Page {i}")
+            embed.set_image(url=f"{QURAN_URL}{str(i).zfill(3)}.png")
+            await quranChannel.send(embed=embed)
+
+        startingPage += numOfPages
         now = datetime.now(timezone)
 
         time = now.replace(hour=12, minute=0, second=0, microsecond=0)
@@ -88,10 +109,6 @@ async def start_werd(ctx, startingPage, numOfPages):
         print(f"Sleeping for {sleep_duration} seconds until the next alarm.")
         await asyncio.sleep(sleep_duration)
 
-        for i in range(startingPage, startingPage + numOfPages):
-            embed = Embed(title=f"Quran Page {i}")
-            embed.set_image(url=f"{QURAN_URL}{str(i).zfill(3)}.png")
-            await quranChannel.send(embed=embed)
 
 if __name__ == '__main__':
     try:
