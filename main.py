@@ -45,7 +45,7 @@ async def start_azkar(ctx):
         await ctx.send(
             """
             Please set the channel to send azkar to.
-            eg. !set-azkar-channel #channel-name
+            eg. /set-azkar-channel #channel-name
             """
         )
         return
@@ -70,45 +70,51 @@ async def set_quran_channel(ctx, channel):
 
 
 @bot.command(name="start-werd")
-async def start_werd(ctx, startingPage, numOfPages):
-
+async def start_werd(ctx, startingPage=1, numOfPages=2):
     numOfPages = int(numOfPages)
     startingPage = int(startingPage)
     quranChannel = ctx.bot.get_channel(QURAN_CHANNEL_ID)
     timezone = pytz.timezone('Asia/Riyadh')
 
     while True:
-        await quranChannel.send(f"""
-<@&1220848108934529145>
-السلام ورحمة الله وبركاته 🌸
-إليكم صفحاتكم اليومية من القرآن الكريم 📖
-اليوم من الصفحة {startingPage} إلى الصفحة {startingPage + numOfPages-1}.
-نسأل الله أن يفتح علينا وعليكم فهم كتابه 🌹
-
-
-As-salamu alaykum warahmatullaahi wabarokaatuh 🌸
-Here are your daily Quran pages 📖
-Today, from page {startingPage} to page {startingPage + numOfPages-1}.
-May Allah grant us understanding of His Book 🌹
-    """)
-
-        for i in range(startingPage, startingPage + numOfPages):
-            embed = Embed(title=f"Quran Page {i}")
-            embed.set_image(url=f"{QURAN_URL}{str(i).zfill(3)}.png")
-            await quranChannel.send(embed=embed)
-
-        startingPage += numOfPages
         now = datetime.now(timezone)
+        next_time = now.replace(hour=12, minute=0, second=0, microsecond=0)
 
-        time = now.replace(hour=12, minute=0, second=0, microsecond=0)
-        if now > time:
-            time += timedelta(days=1)
+        if now > next_time:
+            next_time += timedelta(days=1)
 
-        sleep_duration = (time - now).total_seconds()
-
+        sleep_duration = (next_time - now).total_seconds()
         print(f"Sleeping for {sleep_duration} seconds until the next alarm.")
         await asyncio.sleep(sleep_duration)
 
+        main_message = f"""
+<@&1220848108934529145>
+
+**🌸 وعليكم السلام ورحمة الله وبركاته 🌸**
+
+إليكم صفحاتكم اليومية من القرآن الكريم 📖
+**اليوم من الصفحة {startingPage} إلى الصفحة {startingPage + numOfPages - 1}.**
+نسأل الله أن يفتح علينا وعليكم فهم كتابه 🌹
+
+---
+
+**🌸 As-salamu alaykum wa rahmatullahi wa barakatuh 🌸**
+
+Here are your daily Quran pages 📖
+**Today, from page {startingPage} to page {startingPage + numOfPages - 1}.**
+May Allah grant us understanding of His Book 🌹
+        """
+
+        # Create embeds for each Quran page
+        embeds = []
+        for i in range(startingPage, startingPage + numOfPages):
+            page_num = i if i <= 604 else 1  # Wrap around if page exceeds 604
+            embed = Embed(title=f"📖 Quran Page {page_num}")
+            embed.set_image(url=f"{QURAN_URL}{str(page_num).zfill(3)}.png")
+            embeds.append(embed)
+
+        startingPage += numOfPages
+        await quranChannel.send(content=main_message, embeds=embeds)
 
 if __name__ == '__main__':
     try:
